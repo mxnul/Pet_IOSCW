@@ -6,16 +6,20 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct ContentView: View {
+    let cameraPosition: MapCameraPosition = .region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 6.9533, longitude: 79.8704),
+            latitudinalMeters: 1300,
+            longitudinalMeters: 1300
+        )
+    )
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        Map(initialPosition: cameraPosition){
+            
         }
-        .padding()
     }
 }
 
