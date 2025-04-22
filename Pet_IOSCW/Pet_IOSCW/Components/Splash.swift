@@ -17,7 +17,7 @@ struct Splash: View {
             Spacer()
             Image (systemName: "pawprint.fill")
                 .resizable()
-                .frame(width: 100, height: 100)
+                .frame(width: 150, height: 150)
                 .foregroundColor(.customLightGray)
                 .padding()
             

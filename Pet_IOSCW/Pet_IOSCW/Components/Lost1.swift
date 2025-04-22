@@ -13,14 +13,31 @@ struct Lost1 :View {
     
     var body: some View {
         VStack{
+          
             HStack{
+              
+               
                 Button(" < Back"){}
                 .foregroundColor(.customLightGray)
+                .padding(.top, 50)
+                
                 
                 Spacer()
+                    
+              
             }.padding()
             
-            Spacer()
+            HStack{
+                Text("Add Pet Details")
+                    .font(.title)
+                    .bold()
+                    .foregroundColor(.customLightGray)
+                    .padding(.top, 20)
+                Spacer()
+            }
+                
+            
+           
             
             Button(action: {
                 
@@ -29,22 +46,32 @@ struct Lost1 :View {
                     .resizable()
                     .frame(width: 100, height: 100)
                     .foregroundColor(.customLightGray)
+                    .padding(.top, 50)
+                
+                
                 
                 
             }
+            Text("add photos")
             
             TextField("Enter Pet Name", text: $petName)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
+                .padding(.top, 50)
+                .padding(.bottom, 50)
             
-            TextEditor(text: $description)
-                .frame(height:150)
+            TextField("Start typing", text: $description)
+//                .frame(height:150)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+//
+                .padding()
                 .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.customLightGray))
             
             Spacer()
-            
-            Button ("Next >"){
-                
+            VStack{
+              
+                Button ("Next >"){
+                    
+                }
             }
             .padding()
             .foregroundColor(.customLightGray)

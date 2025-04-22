@@ -18,10 +18,19 @@ struct Login : View {
                 .resizable()
                 .frame(width: 100, height: 100)
                 .foregroundColor(.customLightGray)
+                .padding(.bottom, 50)
+//            Spacer()
             
-            Text("Get Started")
-                .font(.title2)
-                .foregroundColor(.customLightGray)
+            HStack {
+                Text("Get Started")
+                    .font(.title)
+                    .bold()
+                    .foregroundColor(.customLightGray)
+                Spacer()
+            }
+            .padding(.horizontal)
+            
+          
             
             Button("Login"){
             }
@@ -30,6 +39,15 @@ struct Login : View {
             .foregroundColor(.black)
             .background(Color.customLightGray)
             .cornerRadius(10)
+            .padding(.bottom)
+            
+            VStack(alignment: .leading, spacing: 4){
+                
+                Rectangle()
+                    .fill(Color.gray)
+                    .frame(width: 400, height: 2)
+                    .padding(.leading, 8) // Space between text and line
+            }
             
             
         Button("Login with Apple"){
@@ -40,6 +58,7 @@ struct Login : View {
         .foregroundColor(.black)
         .background(Color.customLightGray)
         .cornerRadius(10)
+        .padding(.top)
         
         Button("Login with Google"){
         }
