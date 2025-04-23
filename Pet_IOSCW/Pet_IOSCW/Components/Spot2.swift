@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct Spot2: View {
     @State private var message = ""
+    @State private var showAlert = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -34,28 +36,91 @@ struct Spot2: View {
                 .cornerRadius(10)
                 .foregroundColor(.white)
 
-            HStack {
-                Image(systemName: "mappin")
-                Text("Colombo")
-            }
-            .padding()
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(10)
-            .foregroundColor(.white)
-
             Spacer()
 
             Button("Post") {
-                
+                handlePost()
             }
             .foregroundColor(.black)
             .frame(maxWidth: .infinity)
             .padding()
             .background(Color.customLightGray)
             .cornerRadius(10)
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("Message Sent"),
+                    message: Text("Your message has been sent to the pet owner."),
+                    dismissButton: .default(Text("OK")) {
+                        message = ""
+                    }
+                )
+            }
         }
         .padding()
         .background(Color.black.ignoresSafeArea())
+        .onAppear {
+            UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        }
+    }
+
+    // MARK: - Handle Post and Notifications
+    func handlePost() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            switch settings.authorizationStatus {
+            case .notDetermined:
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+                    if granted {
+                        sendLocalNotification(with: message)
+                    }
+                    DispatchQueue.main.async {
+                        showAlert = true
+                    }
+                }
+            case .authorized:
+                sendLocalNotification(with: message)
+                DispatchQueue.main.async {
+                    showAlert = true
+                }
+            default:
+                DispatchQueue.main.async {
+                    showAlert = true
+                }
+            }
+        }
+    }
+
+    func sendLocalNotification(with body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Message to Pet Owner"
+        content.body = body.isEmpty ? "No message provided." : body
+        content.sound = .default // Works on Simulator and Device
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("🚨 Notification error: \(error.localizedDescription)")
+            } else {
+                print("✅ Notification scheduled.")
+            }
+        }
+    }
+}
+
+// MARK: - Notification Delegate to Show in Foreground
+class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = NotificationDelegate()
+
+    private override init() {
+        super.init()
+        UNUserNotificationCenter.current().delegate = self
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound])
     }
 }
 

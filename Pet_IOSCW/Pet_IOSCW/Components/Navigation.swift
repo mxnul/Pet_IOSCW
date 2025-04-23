@@ -8,6 +8,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab: Tab = .home
+    @State private var isAuthenticated = false
 
     enum Tab {
         case home, vets, lostPet, updates, profile
@@ -16,25 +17,33 @@ struct MainTabView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Show different screens based on the selected tab
+                // Show different screens based on tab
                 Group {
-                    switch selectedTab {
-                    case .home:
-                        Home()
-                    case .vets:
-                        Vets() 
-                    case .lostPet:
-                        Text("Lost Pet View") // Replace with actual Lost Pet view
-                    case .updates:
-                        Text("Updates View") // Replace with actual Updates view
-                    case .profile:
-                        Text("Profile View") // Replace with actual Profile view
+                    if selectedTab == .lostPet && isAuthenticated {
+                        Lost1() // Hide tab bar by skipping CustomTabBar
+                    } else {
+                        switch selectedTab {
+                        case .home:
+                            Home()
+                        case .vets:
+                            Vets()
+                        case .lostPet:
+                            Lost1()
+                            // Show loading or empty view while auth pending
+                            Color.black
+                        case .updates:
+                            Text("Updates View")
+                        case .profile:
+                            Text("Profile View")
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.white)
 
-                CustomTabBar(selectedTab: $selectedTab)
+                // Show tab bar except on Lost1
+                if !(selectedTab == .lostPet && isAuthenticated) {
+                    CustomTabBar(selectedTab: $selectedTab, isAuthenticated: $isAuthenticated)
+                }
             }
         }
         .edgesIgnoringSafeArea(.bottom)
@@ -43,9 +52,11 @@ struct MainTabView: View {
 }
 
 
+
 // MARK: - CustomTabBar
 struct CustomTabBar: View {
     @Binding var selectedTab: MainTabView.Tab
+    @Binding var isAuthenticated: Bool
 
     var body: some View {
         ZStack {
@@ -53,9 +64,7 @@ struct CustomTabBar: View {
                 TabBarButton(image: "house", title: "Home", tab: .home, selectedTab: $selectedTab)
                 Spacer().frame(width: 50)
                 TabBarButton(image: "heart", title: "Vets", tab: .vets, selectedTab: $selectedTab)
-
                 Spacer()
-
                 TabBarButton(image: "clock", title: "Updates", tab: .updates, selectedTab: $selectedTab)
                 Spacer().frame(width: 30)
                 TabBarButton(image: "person", title: "Profile", tab: .profile, selectedTab: $selectedTab)
@@ -64,20 +73,22 @@ struct CustomTabBar: View {
             .background(Color.black.ignoresSafeArea(edges: .bottom))
 
             Button(action: {
-                selectedTab = .lostPet
+                BiometricAuthenticator.authenticate { success in
+                    if success {
+                        isAuthenticated = true
+                        selectedTab = .lostPet
+                    }
+                }
             }) {
                 ZStack {
                     Circle()
                         .fill(Color.customLightGray)
                         .frame(width: 80, height: 80)
                         .shadow(color: Color.black.opacity(0.2), radius: 6, x: 0, y: 4)
-                        .overlay(
-                                Circle().stroke(Color.black, lineWidth: 1)
-                            )
+                        .overlay(Circle().stroke(Color.black, lineWidth: 1))
                     Circle()
                         .fill(Color.black)
                         .frame(width: 70, height: 70)
-//                        .shadow(color: Color.white.opacity(0.2), radius: 6, x: 0, y: 4)
 
                     Text("Lost Pet")
                         .font(.system(size: 13, weight: .bold))
@@ -89,6 +100,7 @@ struct CustomTabBar: View {
         }
     }
 }
+
 
 // MARK: - TabBarButton
 struct TabBarButton: View {
@@ -111,5 +123,4 @@ struct TabBarButton: View {
             }
         }
     }
-}
-
+} 
