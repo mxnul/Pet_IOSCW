@@ -52,7 +52,6 @@ struct MainTabView: View {
 }
 
 
-
 // MARK: - CustomTabBar
 struct CustomTabBar: View {
     @Binding var selectedTab: MainTabView.Tab
@@ -72,13 +71,11 @@ struct CustomTabBar: View {
             .padding()
             .background(Color.black.ignoresSafeArea(edges: .bottom))
 
+            // Removed Biometric Authentication logic completely, keeping the button as a normal button
             Button(action: {
-                BiometricAuthenticator.authenticate { success in
-                    if success {
-                        isAuthenticated = true
-                        selectedTab = .lostPet
-                    }
-                }
+                // This is now a normal button with no biometric action
+                isAuthenticated = true
+                selectedTab = .lostPet
             }) {
                 ZStack {
                     Circle()
@@ -123,4 +120,4 @@ struct TabBarButton: View {
             }
         }
     }
-} 
+}

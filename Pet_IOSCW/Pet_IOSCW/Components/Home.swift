@@ -7,63 +7,60 @@
 
 import SwiftUI
 import MapKit
+import FirebaseFirestore
+//import FirebaseFirestoreSwift
 
 struct Home: View {
-    @State private var searchText = ""
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612),
-        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
-    
-    @State private var selectedTab: MainTabView.Tab = .home
+    @State private var lostPets: [LostPet] = []
+    @State private var selectedPet: LostPet? = nil
 
     var body: some View {
-        VStack(spacing: 0) {
-            VStack {
-                HStack {
-                    Image(systemName: "person.circle.fill")
-                        .foregroundColor(.customLightGray)
-                    Text("Hello, Sarah").bold()
-                        .foregroundColor(.customLightGray)
-                    Spacer()
-                    Image(systemName: "bell")
-                        .foregroundColor(.customLightGray)
+        ZStack {
+            Map(coordinateRegion: $region, annotationItems: lostPets) { pet in
+                MapAnnotation(coordinate: CLLocationCoordinate2D(latitude: pet.coordinates.latitude, longitude: pet.coordinates.longitude)) {
+                    Button {
+                        selectedPet = pet
+                    } label: {
+                        Image(systemName: "mappin.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.title)
+                    }
                 }
-                .padding()
+            }
+            .edgesIgnoringSafeArea(.all)
 
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                    TextField("Enter Last Seen Location", text: $searchText)
-                }
-                .padding()
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
+            if let pet = selectedPet {
+                LostPetDetailView(pet: pet, isPresented: $selectedPet)
+                    .transition(.move(edge: .bottom))
+            }
+        }
+        .onAppear(perform: fetchLostPets)
+        .background(Color.black.ignoresSafeArea())
+    }
 
-                Map(coordinateRegion: $region, annotationItems: sampleLocations) { location in
-                    MapMarker(coordinate: location.coordinate, tint: Color.red)
-                }
-                .frame(height: 600)
-                .cornerRadius(20)
-
-                Spacer()
+    func fetchLostPets() {
+        let db = Firestore.firestore()
+        db.collection("lost_pets").order(by: "timestamp", descending: true).getDocuments { snapshot, error in
+            guard let documents = snapshot?.documents else {
+                print("❌ Error fetching lost pets: \(error?.localizedDescription ?? "")")
+                return
             }
 
-//            // Attach the custom tab bar at the bottom
-//            CustomTabBar(selectedTab: $selectedTab)
+            do {
+                lostPets = try documents.compactMap {
+                    try $0.data(as: LostPet.self)
+                }
+            } catch {
+                print("❌ Decoding error: \(error)")
+            }
         }
-        .edgesIgnoringSafeArea(.bottom)
-        .background(Color.black)
     }
 }
-struct Location : Identifiable {
-    let id = UUID()
-    let coordinate : CLLocationCoordinate2D
-}
-
-let sampleLocations = [
-    Location (coordinate: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612))
-]
-
 #Preview {
     MainTabView()
 }
+

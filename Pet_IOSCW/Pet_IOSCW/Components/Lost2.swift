@@ -10,15 +10,61 @@ import MapKit
 import CoreLocation
 import FirebaseFirestore
 
-struct Lost2: View {
-    var petDocumentID: String
-    @State private var searchText = ""
-    @State private var recentLocations: [String] = []
-    @State private var selectedLocation: String? = nil
-    @State private var region = MKCoordinateRegion(
+// MARK: - LocationManager
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+
+    @Published var location: CLLocation? = nil
+    @Published var region: MKCoordinateRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+    }
+
+    func requestLocation() {
+        if CLLocationManager.locationServicesEnabled() {
+            manager.requestWhenInUseAuthorization()
+            manager.requestLocation()
+        } else {
+            print("❌ Location services are not enabled.")
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let newLocation = locations.first {
+            self.location = newLocation
+            self.region = MKCoordinateRegion(
+                center: newLocation.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            )
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("❌ Failed to get location: \(error.localizedDescription)")
+    }
+}
+
+// MARK: - Struct for map annotations
+struct LocationPin: Identifiable {
+    let id = UUID()
+    let coordinate: CLLocationCoordinate2D
+}
+
+// MARK: - Lost2 View
+struct Lost2: View {
+    var petDocumentID: String
+
+    @StateObject private var locationManager = LocationManager()
+
+    @State private var searchText = ""
+    @State private var recentLocations: [String] = []
+    @State private var selectedLocation: String? = nil
     @FocusState private var isSearchFocused: Bool
     @State private var isSaving = false
     @State private var navigateToLost5 = false
@@ -26,35 +72,19 @@ struct Lost2: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading) {
+                // Search Bar
                 HStack {
                     Image(systemName: "magnifyingglass")
                     TextField("Enter Last Seen Location", text: $searchText, onCommit: {
                         selectLocation(searchText)
                         isSearchFocused = false
-                    }).focused($isSearchFocused)
+                    })
+                    .focused($isSearchFocused)
                 }
                 .padding()
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(10)
                 .padding(.top)
-
-                if isSearchFocused && !recentLocations.isEmpty {
-                    ForEach(recentLocations, id: \.self) { location in
-                        Button {
-                            searchText = location
-                            selectLocation(location)
-                            isSearchFocused = false
-                        } label: {
-                            HStack {
-                                Image(systemName: "clock")
-                                Text(location)
-                                Spacer()
-                            }
-                            .foregroundColor(.white)
-                            .padding(.vertical, 4)
-                        }
-                    }
-                }
 
                 if selectedLocation == nil {
                     Text("Pet Location")
@@ -65,39 +95,27 @@ struct Lost2: View {
                     HStack {
                         Image(systemName: "location.fill")
                             .foregroundColor(.green)
-                        Button("My Current Location") {
-                            getCurrentLocation()
+                        Button("Use My Current Location") {
+                            locationManager.requestLocation()
                         }
                         .foregroundColor(.white)
                         Spacer()
                     }
                     .padding(.vertical)
-
-                    Text("Popular Locations")
-                        .foregroundColor(.gray)
-
-                    ForEach(["Washington", "Park", "Stadium", "Art Gallery", "Raven Park"], id: \.self) { location in
-                        Button {
-                            searchText = location
-                            selectLocation(location)
-                        } label: {
-                            HStack {
-                                Image(systemName: "mappin.circle.fill").foregroundColor(.pink)
-                                Text(location)
-                                Spacer()
-                                Image(systemName: "star").foregroundColor(.yellow)
-                            }
-                            .foregroundColor(.white)
-                            .padding(.vertical, 5)
-                        }
-                    }
                 }
 
-                Map(coordinateRegion: $region)
-                    .frame(height: 400)
-                    .cornerRadius(10)
-                    .padding(.vertical)
+                // Map View
+                Map(
+                    coordinateRegion: $locationManager.region,
+                    annotationItems: locationManager.location.map { [LocationPin(coordinate: $0.coordinate)] } ?? []
+                ) { pin in
+                    MapPin(coordinate: pin.coordinate, tint: .red)
+                }
+                .frame(height: 400)
+                .cornerRadius(10)
+                .padding(.vertical)
 
+                // Next Button
                 Button(action: saveLocation) {
                     if isSaving {
                         ProgressView()
@@ -107,28 +125,31 @@ struct Lost2: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.customLightGray)
+                .background(Color.gray.opacity(0.3)) // Replace with Color.customLightGray if defined
                 .foregroundColor(.black)
                 .cornerRadius(10)
 
+                // Navigation
                 NavigationLink(destination: Lost5(petDocumentID: petDocumentID), isActive: $navigateToLost5) {
                     EmptyView()
                 }
-                
-               
 
                 Spacer()
             }
             .padding()
             .background(Color.black.ignoresSafeArea())
+            .onAppear {
+                locationManager.requestLocation()
+            }
         }
     }
 
+    // MARK: - Geocode typed location
     func selectLocation(_ location: String) {
         let geocoder = CLGeocoder()
         geocoder.geocodeAddressString(location) { placemarks, error in
             if let coordinate = placemarks?.first?.location?.coordinate {
-                region.center = coordinate
+                locationManager.region.center = coordinate
                 selectedLocation = location
                 if !recentLocations.contains(location) {
                     recentLocations.insert(location, at: 0)
@@ -142,36 +163,22 @@ struct Lost2: View {
         }
     }
 
-    func getCurrentLocation() {
-        let manager = CLLocationManager()
-        manager.requestWhenInUseAuthorization()
-        if let location = manager.location {
-            region.center = location.coordinate
-            selectedLocation = "Current Location"
-
-            let geocoder = CLGeocoder()
-            geocoder.reverseGeocodeLocation(location) { placemarks, _ in
-                if let name = placemarks?.first?.name {
-                    selectedLocation = name
-                }
-            }
-        }
-    }
-
+    // MARK: - Save location to Firestore
     func saveLocation() {
-        guard let selectedLocation = selectedLocation else {
-            print("❌ No location selected.")
+        guard let location = locationManager.location else {
+            print("❌ Location is not available.")
             return
         }
 
+        selectedLocation = "User's Current Location"
         isSaving = true
-        let db = Firestore.firestore()
 
+        let db = Firestore.firestore()
         db.collection("lost_pets").document(petDocumentID).updateData([
-            "lastSeenLocation": selectedLocation,
+            "lastSeenLocation": selectedLocation ?? "Unknown",
             "coordinates": [
-                "latitude": region.center.latitude,
-                "longitude": region.center.longitude
+                "latitude": location.coordinate.latitude,
+                "longitude": location.coordinate.longitude
             ]
         ]) { error in
             isSaving = false
@@ -185,6 +192,7 @@ struct Lost2: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     Lost2(petDocumentID: "sampleDocID")
 }
