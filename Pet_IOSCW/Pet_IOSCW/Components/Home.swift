@@ -8,7 +8,7 @@
 import SwiftUI
 import MapKit
 import FirebaseFirestore
-//import FirebaseFirestoreSwift
+
 
 struct Home: View {
     @State private var region = MKCoordinateRegion(
@@ -21,13 +21,16 @@ struct Home: View {
     var body: some View {
         ZStack {
             Map(coordinateRegion: $region, annotationItems: lostPets) { pet in
-                MapAnnotation(coordinate: CLLocationCoordinate2D(latitude: pet.coordinates.latitude, longitude: pet.coordinates.longitude)) {
+                MapAnnotation(coordinate: pet.locationCoordinate) {
                     Button {
                         selectedPet = pet
                     } label: {
                         Image(systemName: "mappin.circle.fill")
                             .foregroundColor(.red)
                             .font(.title)
+                            .frame(width: 40, height: 40)
+                            .background(Circle().fill(Color.white).shadow(radius: 5))
+                            .clipShape(Circle())
                     }
                 }
             }
@@ -44,22 +47,27 @@ struct Home: View {
 
     func fetchLostPets() {
         let db = Firestore.firestore()
-        db.collection("lost_pets").order(by: "timestamp", descending: true).getDocuments { snapshot, error in
-            guard let documents = snapshot?.documents else {
-                print("❌ Error fetching lost pets: \(error?.localizedDescription ?? "")")
-                return
-            }
-
-            do {
-                lostPets = try documents.compactMap {
-                    try $0.data(as: LostPet.self)
+        db.collection("lost_pets")
+            .order(by: "timestamp", descending: true)
+            .getDocuments { snapshot, error in
+                guard let documents = snapshot?.documents else {
+                    print("❌ Error: \(error?.localizedDescription ?? "Unknown error")")
+                    return
                 }
-            } catch {
-                print("❌ Decoding error: \(error)")
+                
+                lostPets = documents.compactMap { doc in
+                    do {
+                        return try doc.data(as: LostPet.self)
+                    } catch {
+                        print("🔥 DECODING ERROR: \(error)")
+                        print("🔥 DOCUMENT DATA: \(doc.data())")
+                        return nil
+                    }
+                }
             }
-        }
     }
 }
+
 #Preview {
     MainTabView()
 }

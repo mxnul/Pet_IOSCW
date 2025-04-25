@@ -4,9 +4,9 @@
 //
 //  Created by Manula 048 on 2025-04-24.
 //
-
 import Foundation
-import CoreLocation
+import FirebaseFirestore
+import MapKit
 import FirebaseFirestore
 
 struct LostPet: Identifiable, Codable {
@@ -15,7 +15,15 @@ struct LostPet: Identifiable, Codable {
     var description: String
     var imageUrls: [String]
     var lastSeenLocation: String
-    var coordinates: GeoPoint
+    var coordinates: [String: Double]  // Changed to map/dictionary
     var contactNumber: String
     var timestamp: Date
+    
+    // Helper property for MapKit
+    var locationCoordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(
+            latitude: coordinates["latitude"] ?? 0,
+            longitude: coordinates["longitude"] ?? 0
+        )
+    }
 }

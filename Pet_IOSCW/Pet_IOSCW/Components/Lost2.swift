@@ -10,15 +10,19 @@ import MapKit
 import CoreLocation
 import FirebaseFirestore
 
+// MARK: - Global Constant for Colombo
+let colomboRegion = MKCoordinateRegion(
+    center: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612),
+    span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+)
+
 // MARK: - LocationManager
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
 
     @Published var location: CLLocation? = nil
-    @Published var region: MKCoordinateRegion = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194),
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-    )
+    @Published var region: MKCoordinateRegion = colomboRegion
+    @Published var showCurrentLocationPin: Bool = false
 
     override init() {
         super.init()
@@ -42,6 +46,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 center: newLocation.coordinate,
                 span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
+            self.showCurrentLocationPin = true
         }
     }
 
@@ -50,7 +55,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 }
 
-// MARK: - Struct for map annotations
+// MARK: - Location Pin Struct
 struct LocationPin: Identifiable {
     let id = UUID()
     let coordinate: CLLocationCoordinate2D
@@ -107,9 +112,14 @@ struct Lost2: View {
                 // Map View
                 Map(
                     coordinateRegion: $locationManager.region,
-                    annotationItems: locationManager.location.map { [LocationPin(coordinate: $0.coordinate)] } ?? []
+                    annotationItems: locationManager.showCurrentLocationPin && locationManager.location != nil ?
+                        [LocationPin(coordinate: locationManager.location!.coordinate)] : []
                 ) { pin in
-                    MapPin(coordinate: pin.coordinate, tint: .red)
+                    MapAnnotation(coordinate: pin.coordinate) {
+                        Image(systemName: "mappin.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.title)
+                    }
                 }
                 .frame(height: 400)
                 .cornerRadius(10)
@@ -125,7 +135,7 @@ struct Lost2: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.gray.opacity(0.3)) // Replace with Color.customLightGray if defined
+                .background(Color.gray.opacity(0.3))
                 .foregroundColor(.black)
                 .cornerRadius(10)
 
@@ -138,9 +148,6 @@ struct Lost2: View {
             }
             .padding()
             .background(Color.black.ignoresSafeArea())
-            .onAppear {
-                locationManager.requestLocation()
-            }
         }
     }
 
@@ -151,6 +158,8 @@ struct Lost2: View {
             if let coordinate = placemarks?.first?.location?.coordinate {
                 locationManager.region.center = coordinate
                 selectedLocation = location
+                locationManager.showCurrentLocationPin = true
+                locationManager.location = placemarks?.first?.location
                 if !recentLocations.contains(location) {
                     recentLocations.insert(location, at: 0)
                     if recentLocations.count > 5 {
