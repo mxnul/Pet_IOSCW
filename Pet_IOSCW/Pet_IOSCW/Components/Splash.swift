@@ -12,28 +12,45 @@ extension Color {
 }
 
 struct Splash: View {
+    @State private var isActive = false
+
     var body: some View {
-        VStack {
-            Spacer()
-            Image (systemName: "pawprint.fill")
-                .resizable()
-                .frame(width: 150, height: 150)
-                .foregroundColor(.customLightGray)
-                .padding()
-            
-            Text("Pet Locator")
-                .font(.title)
-                .bold()
-                .foregroundColor(.customLightGray)
-            
-            Text("find your furball in a flash!")
-                .foregroundColor(.customLightGray)
-                .padding(.top,2)
-            Spacer()
+        NavigationStack {
+            ZStack {
+                if isActive {
+                    Login()
+                } else {
+                    VStack {
+                        Spacer()
+                        Image(systemName: "pawprint.fill")
+                            .resizable()
+                            .frame(width: 150, height: 150)
+                            .foregroundColor(.customLightGray)
+                            .padding()
+
+                        Text("Pet Locator")
+                            .font(.title)
+                            .bold()
+                            .foregroundColor(.customLightGray)
+
+                        Text("find your furball in a flash!")
+                            .foregroundColor(.customLightGray)
+                            .padding(.top, 2)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black)
+                    .ignoresSafeArea()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                            withAnimation {
+                                isActive = true
+                            }
+                        }
+                    }
+                }
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black)
-        .ignoresSafeArea()
     }
 }
 

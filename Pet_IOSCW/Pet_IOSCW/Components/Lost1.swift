@@ -4,12 +4,12 @@
 //
 //  Created by Manula 048 on 2025-04-19.
 //
-
 import SwiftUI
 import PhotosUI
 import Firebase
 import FirebaseStorage
 import FirebaseFirestore
+import UIKit
 
 struct Lost1: View {
     @Environment(\.dismiss) var dismiss
@@ -23,6 +23,10 @@ struct Lost1: View {
     @State private var navigateToLost2 = false
     @State private var createdDocID: String? = nil
 
+    // Core ML
+    @State private var detectedTags: [String] = []
+    @State private var isAnalyzing = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -30,7 +34,7 @@ struct Lost1: View {
                     // Back button
                     HStack {
                         Button("< Back") { dismiss() }
-                            .foregroundColor(.customLightGray)
+                            .foregroundColor(.gray)
                             .padding(.top, 50)
                         Spacer()
                     }.padding()
@@ -39,7 +43,7 @@ struct Lost1: View {
                     Text("Add Pet Details")
                         .font(.title)
                         .bold()
-                        .foregroundColor(.customLightGray)
+                        .foregroundColor(.gray)
                         .padding(.top, 20)
 
                     // Image Picker
@@ -52,10 +56,23 @@ struct Lost1: View {
                     }
                     .onChange(of: selectedItems) { newItems in
                         selectedImageDataList = []
+                        detectedTags = []
                         Task {
                             for item in newItems {
                                 if let data = try? await item.loadTransferable(type: Data.self) {
                                     selectedImageDataList.append(data)
+                                }
+                            }
+                            // Analyze the first image for tags
+                            if let firstImageData = selectedImageDataList.first,
+                               let uiImage = UIImage(data: firstImageData) {
+                                isAnalyzing = true
+                                let classifier = ImageClassifier()
+                                classifier.classify(image: uiImage) { tags in
+                                    DispatchQueue.main.async {
+                                        self.detectedTags = tags
+                                        self.isAnalyzing = false
+                                    }
                                 }
                             }
                         }
@@ -80,11 +97,25 @@ struct Lost1: View {
                         .frame(height: 320)
                     }
 
+                    // Tag display and removal
+                    if isAnalyzing {
+                        ProgressView("Analyzing image...")
+                            .padding(.vertical)
+                    } else if !detectedTags.isEmpty {
+                        VStack(alignment: .leading) {
+                            Text("Detected Tags")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                            Wrap(tags: $detectedTags)
+                        }
+                        .padding(.vertical)
+                    }
+
                     // Pet Name
                     TextField("Enter Pet Name", text: $petName)
                         .padding()
-                        .foregroundColor(.customLightGray)
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.customLightGray, lineWidth: 1))
+                        .foregroundColor(.gray)
+                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gray, lineWidth: 1))
                         .padding(.top, 30)
 
                     // Description
@@ -96,13 +127,13 @@ struct Lost1: View {
                         .foregroundColor(.white)
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.customLightGray, lineWidth: 1)
+                                .stroke(Color.gray, lineWidth: 1)
                         )
                         .padding(.bottom, 40)
 
                     // Upload Button
                     Button(action: savePetDetails) {
-                        if isUploading {
+                        if isUploading || isAnalyzing {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
                         } else {
@@ -112,10 +143,10 @@ struct Lost1: View {
                     }
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color.customLightGray)
+                    .background(Color.gray)
                     .foregroundColor(.black)
                     .cornerRadius(10)
-                    .disabled(isUploading)
+                    .disabled(isUploading || isAnalyzing)
 
                     NavigationLink(
                         destination: createdDocID.map { Lost2(petDocumentID: $0) },
@@ -123,8 +154,6 @@ struct Lost1: View {
                     ) {
                         EmptyView()
                     }
-
-
                 }
                 .padding()
             }
@@ -149,6 +178,7 @@ struct Lost1: View {
                 "petName": petName,
                 "description": description,
                 "imageUrls": urls,
+                "tags": detectedTags,
                 "timestamp": Timestamp(date: Date())
             ]) { error in
                 isUploading = false
@@ -206,7 +236,33 @@ struct Lost1: View {
     }
 }
 
+// Tag display and removal view
+struct Wrap: View {
+    @Binding var tags: [String]
+
+    var body: some View {
+        // Simple horizontal wrap for tags
+        VStack(alignment: .leading) {
+            ForEach(tags, id: \.self) { tag in
+                HStack {
+                    Text(tag)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                    Button(action: {
+                        if let idx = tags.firstIndex(of: tag) {
+                            tags.remove(at: idx)
+                        }
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.red)
+                    }
+                }
+            }
+        }
+    }
+}
+
 #Preview {
     Lost1()
 }
-

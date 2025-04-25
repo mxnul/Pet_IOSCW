@@ -17,6 +17,7 @@ struct LostPet: Identifiable, Codable {
     var lastSeenLocation: String
     var coordinates: [String: Double]  // Changed to map/dictionary
     var contactNumber: String
+    var tags: [String]? 
     var timestamp: Date
     
     // Helper property for MapKit

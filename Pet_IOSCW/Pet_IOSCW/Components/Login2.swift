@@ -13,8 +13,8 @@ struct Login2: View {
     @State private var password: String = ""
     @State private var errorMessage: String?
     @State private var isLoading: Bool = false
-    @State private var isLoggedIn: Bool = false // Track login status
-
+    @State private var isLoggedIn: Bool = false
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -72,7 +72,7 @@ struct Login2: View {
             .background(Color.black)
           
 
-            // Navigate to MainTabView if login is successful
+            
             .background(
                 NavigationLink(destination: MainTabView(), isActive: $isLoggedIn) {
                     EmptyView()
@@ -91,7 +91,7 @@ struct Login2: View {
             if let error = error {
                 errorMessage = error.localizedDescription
             } else {
-                // If login is successful, set isLoggedIn to true to trigger navigation
+              
                 isLoggedIn = true
             }
         }
