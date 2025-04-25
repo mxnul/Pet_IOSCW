@@ -7,75 +7,122 @@
 
 import SwiftUI
 
+struct VetService: Identifiable {
+    let id = UUID()
+    let title: String
+    let imageName: String
+}
+
+let vetServices = [
+    VetService(title: "Bathing & Drying", imageName: "bathtub"),
+    VetService(title: "Hair Trimming", imageName: "scissors"),
+    VetService(title: "Nail Trimming", imageName: "pawprint"),
+    VetService(title: "Ear Cleaning", imageName: "ear"),
+    VetService(title: "Teeth Brushing", imageName: "mouth"),
+    VetService(title: "Flea Treatment", imageName: "ant")
+]
+
 struct Vets: View {
-    let services = [
-        ("Bathing & Drying", "scissors"),
-        ("Hair Trimming", "scissors"),
-        ("Nail Trimming", "scissors"),
-        ("Ear Cleaning", "ear"),
-        ("Teeth Brushing", "mouth"),
-        ("Flea Treatment", "bandage")
+    @State private var searchText = ""
+    
+    let columns = [
+        GridItem(.flexible(), spacing: 20),
+        GridItem(.flexible(), spacing: 20)
     ]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("60% OFF")
-                .font(.title)
-                .padding()
-                .background(Color.white.opacity(0.2))
-                .cornerRadius(10)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-
-            TextField("Search", text: .constant(""))
-                .padding()
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .foregroundColor(.white)
-
-            Text("Our Services")
-                .foregroundColor(.white)
-                .font(.headline)
-
-            LazyVGrid(columns: [GridItem(), GridItem()]) {
-                ForEach(services, id: \.0) { service in
-                    VStack {
-                        Image(systemName: service.1)
-                            .resizable()
-                            .frame(width: 40, height: 40)
-                            .foregroundColor(.white)
-                        Text(service.0)
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(10)
-                }
-            }
-
-            Spacer()
-
-            HStack {
-                ForEach(["Home", "Vets", "Lost Pet", "Update", "Profile"], id: \.self) { tab in
-                    VStack {
-                        Image(systemName: "circle")
-                            .foregroundColor(.white)
-                        Text(tab)
-                            .font(.caption)
-                            .foregroundColor(.white)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-            .padding()
-            .background(Color.white.opacity(0.1))
+    
+    var filteredServices: [VetService] {
+        searchText.isEmpty ? vetServices : vetServices.filter {
+            $0.title.localizedCaseInsensitiveContains(searchText)
         }
-        .padding()
-        .background(Color.black.ignoresSafeArea())
+    }
+    
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            
+            VStack(alignment: .leading, spacing: 20) {
+               
+                HStack {
+                    Button(action: {  }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.white)
+                            .font(.title2)
+                            .padding(.trailing, 8)
+                       
+                    }
+                    Spacer()
+                }
+                
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("60% OFF")
+                            .font(.headline)
+                            .foregroundColor(.black)
+                        Text("On hair & spa treatment")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                    Spacer()
+                    Image(systemName: "photo")
+                        .resizable()
+                        .frame(width: 50, height: 50)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(16)
+                
+               
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.gray)
+                    TextField("Search", text: $searchText)
+                        .foregroundColor(.white)
+                }
+                .padding()
+                .background(Color(.systemGray5).opacity(0.12))
+                .cornerRadius(12)
+                
+                
+                Text("Our Services")
+                    .foregroundColor(.white)
+                    .font(.title3)
+                    .bold()
+                    .padding(.top, 8)
+                
+                LazyVGrid(columns: columns, spacing: 20) {
+                    ForEach(filteredServices) { service in
+                        VStack(spacing: 8) {
+                            ZStack {
+                                Color.white
+                                    .cornerRadius(16)
+                                Image(systemName: service.imageName)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 60, height: 60)
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(height: 90)
+                            
+                            Text(service.title)
+                                .foregroundColor(.white)
+                                .font(.subheadline)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+        }
+        .navigationBarHidden(true)
     }
 }
 
-#Preview {
-    Vets()
+struct VetsView_Previews: PreviewProvider {
+    static var previews: some View {
+        Vets()
+    }
 }

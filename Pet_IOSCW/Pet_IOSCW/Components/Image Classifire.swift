@@ -33,7 +33,7 @@ class ImageClassifier {
                 completion([])
                 return
             }
-            // Get top 5 tags
+        
             let tags = results.prefix(5).map { $0.identifier }
             completion(tags)
         }

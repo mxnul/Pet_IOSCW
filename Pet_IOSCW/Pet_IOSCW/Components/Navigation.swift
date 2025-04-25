@@ -4,6 +4,8 @@
 //
 //  Created by Manula 048 on 2025-04-21.
 //
+//
+
 import SwiftUI
 
 struct MainTabView: View {
@@ -17,10 +19,10 @@ struct MainTabView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Show different screens based on tab
+               
                 Group {
                     if selectedTab == .lostPet && isAuthenticated {
-                        Lost1() // Hide tab bar by skipping CustomTabBar
+                        Lost1()
                     } else {
                         switch selectedTab {
                         case .home:
@@ -29,7 +31,7 @@ struct MainTabView: View {
                             Vets()
                         case .lostPet:
                             Lost1()
-                            // Show loading or empty view while auth pending
+                            
                             Color.black
                         case .updates:
                             Text("Updates View")
@@ -40,7 +42,7 @@ struct MainTabView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                // Show tab bar except on Lost1
+              
                 if !(selectedTab == .lostPet && isAuthenticated) {
                     CustomTabBar(selectedTab: $selectedTab, isAuthenticated: $isAuthenticated)
                 }
@@ -52,7 +54,6 @@ struct MainTabView: View {
 }
 
 
-// MARK: - CustomTabBar
 struct CustomTabBar: View {
     @Binding var selectedTab: MainTabView.Tab
     @Binding var isAuthenticated: Bool
@@ -71,9 +72,9 @@ struct CustomTabBar: View {
             .padding()
             .background(Color.black.ignoresSafeArea(edges: .bottom))
 
-            // Removed Biometric Authentication logic completely, keeping the button as a normal button
+            
             Button(action: {
-                // This is now a normal button with no biometric action
+               
                 isAuthenticated = true
                 selectedTab = .lostPet
             }) {
@@ -99,7 +100,6 @@ struct CustomTabBar: View {
 }
 
 
-// MARK: - TabBarButton
 struct TabBarButton: View {
     let image: String
     let title: String
@@ -121,3 +121,13 @@ struct TabBarButton: View {
         }
     }
 }
+
+
+
+    var body: some View {
+        Text("Spot2 View Content")
+            .foregroundColor(.white)
+            .background(Color.black)
+            .navigationBarHidden(true) 
+    }
+

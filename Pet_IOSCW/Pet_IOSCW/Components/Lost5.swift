@@ -13,13 +13,26 @@ struct Lost5: View {
     @State private var contactNumber = ""
     @State private var showSuccessAlert = false
     @State private var navigateToMainTab = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 20) {
+                
+                Button(action: { dismiss() }) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.customLightGray)
+                        Text("Back")
+                            .foregroundColor(.customLightGray)
+                    }
+                    .padding(.bottom, 20)
+                }
+
                 Text("Enter Your Contact Number")
                     .font(.title2)
                     .foregroundColor(.white)
+                    .padding(.bottom, 30)
 
                 HStack {
                     Text("+94")
@@ -28,12 +41,16 @@ struct Lost5: View {
                         .cornerRadius(10)
                         .foregroundColor(.white)
 
-                    TextField("Enter number", text: $contactNumber)
-                        .padding()
-                        .background(Color.white.opacity(0.1))
-                        .cornerRadius(10)
-                        .keyboardType(.numberPad)
-                        .foregroundColor(.white)
+                    TextField(
+                        "",
+                        text: $contactNumber,
+                        prompt: Text("Enter number").foregroundColor(.customLightGray)
+                    )
+                    .padding()
+                    .background(Color.white.opacity(0.1))
+                    .cornerRadius(10)
+                    .keyboardType(.numberPad)
+                    .foregroundColor(.white)
                 }
 
                 Spacer()
@@ -47,7 +64,6 @@ struct Lost5: View {
                 .background(Color.customLightGray)
                 .cornerRadius(10)
                 
-                // NavigationLink triggered programmatically
                 NavigationLink(destination: MainTabView(), isActive: $navigateToMainTab) {
                     EmptyView()
                 }
@@ -60,9 +76,9 @@ struct Lost5: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden(true)   
     }
 
-    // MARK: - Firestore Update
     func saveContactNumber() {
         let db = Firestore.firestore()
         db.collection("lost_pets").document(petDocumentID).updateData([

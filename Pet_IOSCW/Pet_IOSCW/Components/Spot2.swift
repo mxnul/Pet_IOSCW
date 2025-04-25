@@ -4,7 +4,6 @@
 //
 //  Created by Manula 048 on 2025-04-21.
 //
-
 import SwiftUI
 import UserNotifications
 
@@ -13,57 +12,74 @@ struct Spot2: View {
     @State private var showAlert = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Text("Tap to Contact Owner")
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack {
+                    Text("Tap to Contact Owner")
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(10)
+                    Spacer()
+                    Image(systemName: "phone.fill")
+                        .foregroundColor(.white)
+                }
+
+                Text("Send A Message To The Owner")
                     .foregroundColor(.white)
-                    .padding()
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(10)
-                Spacer()
-                Image(systemName: "phone.fill")
-                    .foregroundColor(.white)
-            }
+                    .font(.headline)
 
-            Text("Send A Message To The Owner")
-                .foregroundColor(.white)
-                .font(.headline)
-
-            TextEditor(text: $message)
-                .frame(height: 150)
-                .padding()
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .foregroundColor(.white)
-
-            Spacer()
-
-            Button("Post") {
-                handlePost()
-            }
-            .foregroundColor(.black)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.customLightGray)
-            .cornerRadius(10)
-            .alert(isPresented: $showAlert) {
-                Alert(
-                    title: Text("Message Sent"),
-                    message: Text("Your message has been sent to the pet owner."),
-                    dismissButton: .default(Text("OK")) {
-                        message = ""
+                ZStack {
+                    if message.isEmpty {
+                        TextEditor(text: .constant("Type your message here..."))
+                            .foregroundColor(.black.opacity(0.5))
+                            .frame(height: 150)
+                            .padding()
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(10)
+                            .disabled(true)
                     }
-                )
+                    
+                    TextEditor(text: $message)
+                        .foregroundColor(.black)
+                        .frame(height: 150)
+                        .padding()
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(10)
+                        .zIndex(1)
+                }
+
+                Spacer()
+
+                Button("Post") {
+                    handlePost()
+                }
+                .foregroundColor(.black)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.customLightGray)
+                .cornerRadius(10)
+                .alert(isPresented: $showAlert) {
+                    Alert(
+                        title: Text("Message Sent"),
+                        message: Text("Your message has been sent to the pet owner."),
+                        dismissButton: .default(Text("OK")) {
+                            message = ""
+                        }
+                    )
+                }
             }
+            .padding()
+            .background(Color.black.ignoresSafeArea())
+            .onAppear {
+                UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+            }
+            .navigationBarHidden(true)
         }
-        .padding()
-        .background(Color.black.ignoresSafeArea())
-        .onAppear {
-            UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
-        }
+        .navigationBarHidden(true)
     }
 
-    // MARK: - Handle Post and Notifications
+   
     func handlePost() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             switch settings.authorizationStatus {
@@ -93,7 +109,7 @@ struct Spot2: View {
         let content = UNMutableNotificationContent()
         content.title = "Message to Pet Owner"
         content.body = body.isEmpty ? "No message provided." : body
-        content.sound = .default // Works on Simulator and Device
+        content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
 
@@ -108,7 +124,7 @@ struct Spot2: View {
     }
 }
 
-// MARK: - Notification Delegate to Show in Foreground
+
 class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationDelegate()
 

@@ -10,13 +10,13 @@ import MapKit
 import CoreLocation
 import FirebaseFirestore
 
-// MARK: - Global Constant for Colombo
+
 let colomboRegion = MKCoordinateRegion(
     center: CLLocationCoordinate2D(latitude: 6.9271, longitude: 79.8612),
     span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
 )
 
-// MARK: - LocationManager
+
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
 
@@ -55,18 +55,18 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 }
 
-// MARK: - Location Pin Struct
+
 struct LocationPin: Identifiable {
     let id = UUID()
     let coordinate: CLLocationCoordinate2D
 }
 
-// MARK: - Lost2 View
+
 struct Lost2: View {
     var petDocumentID: String
+    @Environment(\.dismiss) private var dismiss
 
     @StateObject private var locationManager = LocationManager()
-
     @State private var searchText = ""
     @State private var recentLocations: [String] = []
     @State private var selectedLocation: String? = nil
@@ -77,20 +77,17 @@ struct Lost2: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading) {
-                // Search Bar
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                    TextField("Enter Last Seen Location", text: $searchText, onCommit: {
-                        selectLocation(searchText)
-                        isSearchFocused = false
-                    })
-                    .focused($isSearchFocused)
+               
+                Button(action: { dismiss() }) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.customLightGray)
+                        Text("Back")
+                            .foregroundColor(.customLightGray)
+                    }
+                    .padding(.bottom, 10)
                 }
-                .padding()
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(10)
-                .padding(.top)
-
+                
                 if selectedLocation == nil {
                     Text("Pet Location")
                         .font(.title)
@@ -108,8 +105,28 @@ struct Lost2: View {
                     }
                     .padding(.vertical)
                 }
+                
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.white)
+                    
+                    TextField("", text: $searchText, onCommit: {
+                        selectLocation(searchText)
+                        isSearchFocused = false
+                    })
+                    .focused($isSearchFocused)
+                    .placeholder(when: searchText.isEmpty) {
+                        Text("Enter Last Seen Location")
+                            .foregroundColor(.gray)
+                    }
+                    .foregroundColor(.white)
+                }
+                .padding()
+                .background(Color.black)
+                .cornerRadius(10)
+                .padding(.top)
 
-                // Map View
+               
                 Map(
                     coordinateRegion: $locationManager.region,
                     annotationItems: locationManager.showCurrentLocationPin && locationManager.location != nil ?
@@ -124,22 +141,24 @@ struct Lost2: View {
                 .frame(height: 400)
                 .cornerRadius(10)
                 .padding(.vertical)
+                .padding(.bottom, 40)
 
-                // Next Button
+               
                 Button(action: saveLocation) {
                     if isSaving {
                         ProgressView()
                     } else {
-                        Text("Next >").bold()
+                        Text("Next ").bold()
                     }
                 }
+                
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.gray.opacity(0.3))
+                .background(Color.customLightGray)
                 .foregroundColor(.black)
-                .cornerRadius(10)
+                .cornerRadius(20)
 
-                // Navigation
+              
                 NavigationLink(destination: Lost5(petDocumentID: petDocumentID), isActive: $navigateToLost5) {
                     EmptyView()
                 }
@@ -149,9 +168,10 @@ struct Lost2: View {
             .padding()
             .background(Color.black.ignoresSafeArea())
         }
+        .navigationBarBackButtonHidden(true)
     }
 
-    // MARK: - Geocode typed location
+    
     func selectLocation(_ location: String) {
         let geocoder = CLGeocoder()
         geocoder.geocodeAddressString(location) { placemarks, error in
@@ -172,7 +192,7 @@ struct Lost2: View {
         }
     }
 
-    // MARK: - Save location to Firestore
+    
     func saveLocation() {
         guard let location = locationManager.location else {
             print("❌ Location is not available.")
@@ -201,7 +221,21 @@ struct Lost2: View {
     }
 }
 
-// MARK: - Preview
+
+extension View {
+    func placeholder<Content: View>(
+        when shouldShow: Bool,
+        alignment: Alignment = .leading,
+        @ViewBuilder placeholder: () -> Content
+    ) -> some View {
+        ZStack(alignment: alignment) {
+            placeholder().opacity(shouldShow ? 1 : 0)
+            self
+        }
+    }
+}
+
+
 #Preview {
     Lost2(petDocumentID: "sampleDocID")
 }

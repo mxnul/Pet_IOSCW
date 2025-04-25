@@ -5,14 +5,19 @@
 //  Created by Manula 048 on 2025-04-19.
 //
 import SwiftUI
+import LocalAuthentication
 
 struct Login: View {
     @State private var navigateToLogin2 = false
-
+    @State private var navigateToMainTab = false
+    @State private var showBiometricAlert = false
+    @State private var biometricError: String?
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
                 Spacer()
+                
                 Image(systemName: "pawprint.fill")
                     .resizable()
                     .frame(width: 100, height: 100)
@@ -28,16 +33,21 @@ struct Login: View {
                 }
                 .padding(.horizontal)
 
-                
+               
                 NavigationLink(destination: Login2(), isActive: $navigateToLogin2) {
                     EmptyView()
                 }
+                
+                NavigationLink(destination: MainTabView(), isActive: $navigateToMainTab) {
+                    EmptyView()
+                }
 
+               
                 Button("Login") {
                     navigateToLogin2 = true
                 }
                 .padding()
-                .frame(maxWidth: .infinity)
+                .frame(width: 380)
                 .foregroundColor(.black)
                 .background(Color.customLightGray)
                 .cornerRadius(20)
@@ -50,20 +60,33 @@ struct Login: View {
                         .padding(.leading, 8)
                 }
 
+               
                 Button("Login with Face ID") {
+                    authenticateWithBiometrics()
                 }
                 .padding()
-                .frame(maxWidth: .infinity)
+                .frame(width: 380)
                 .foregroundColor(.black)
                 .background(Color.customLightGray)
                 .cornerRadius(20)
                 .padding(.top)
                 .padding(.bottom, 10)
+                .alert(isPresented: $showBiometricAlert) {
+                    Alert(
+                        title: Text("Authentication Result"),
+                        message: Text(biometricError ?? "Authentication successful"),
+                        dismissButton: .default(Text("OK")) {
+                            if biometricError == nil {
+                                navigateToMainTab = true 
+                            }
+                        }
+                    )
+                }
 
                 Button("Login with Apple ID") {
                 }
                 .padding()
-                .frame(maxWidth: .infinity)
+                .frame(width: 380)
                 .foregroundColor(.black)
                 .background(Color.customLightGray)
                 .cornerRadius(20)
@@ -77,11 +100,21 @@ struct Login: View {
             }
             .padding()
             .background(Color.black)
-            .ignoresSafeArea()
+        }
+    }
+    
+    private func authenticateWithBiometrics() {
+        BiometricAuthenticator.authenticate { success in
+            if success {
+                biometricError = nil
+                showBiometricAlert = true
+            } else {
+                biometricError = "Failed to authenticate. Please try again."
+                showBiometricAlert = true
+            }
         }
     }
 }
-
 
 #Preview {
     Login()

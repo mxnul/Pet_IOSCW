@@ -23,7 +23,7 @@ struct Pet_IOSCWApp: App {
     var body: some Scene {
         WindowGroup {
             NavigationView {
-                Splash()
+              Splash()
             }
         }
     }

@@ -15,12 +15,12 @@ struct LostPet: Identifiable, Codable {
     var description: String
     var imageUrls: [String]
     var lastSeenLocation: String
-    var coordinates: [String: Double]  // Changed to map/dictionary
+    var coordinates: [String: Double]
     var contactNumber: String
     var tags: [String]? 
     var timestamp: Date
     
-    // Helper property for MapKit
+    
     var locationCoordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(
             latitude: coordinates["latitude"] ?? 0,

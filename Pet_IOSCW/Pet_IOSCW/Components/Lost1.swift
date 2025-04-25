@@ -23,7 +23,7 @@ struct Lost1: View {
     @State private var navigateToLost2 = false
     @State private var createdDocID: String? = nil
 
-    // Core ML
+   
     @State private var detectedTags: [String] = []
     @State private var isAnalyzing = false
 
@@ -31,22 +31,25 @@ struct Lost1: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading) {
-                    // Back button
-                    HStack {
-                        Button("< Back") { dismiss() }
-                            .foregroundColor(.gray)
-                            .padding(.top, 50)
-                        Spacer()
-                    }.padding()
+                   
+                    Button(action: { dismiss() }) {
+                        HStack {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(.customLightGray)
+                            Text("Back")
+                                .foregroundColor(.customLightGray)
+                        }
+                        .padding(.bottom, 10)
+                    }
 
-                    // Title
+                 
                     Text("Add Pet Details")
                         .font(.title)
                         .bold()
-                        .foregroundColor(.gray)
+                        .foregroundColor(.customLightGray)
                         .padding(.top, 20)
 
-                    // Image Picker
+                   
                     PhotosPicker(selection: $selectedItems, maxSelectionCount: 5, matching: .images) {
                         Label("Select Pet Photos", systemImage: "photo.on.rectangle")
                             .frame(width: 350, height: 50)
@@ -63,7 +66,7 @@ struct Lost1: View {
                                     selectedImageDataList.append(data)
                                 }
                             }
-                            // Analyze the first image for tags
+                            
                             if let firstImageData = selectedImageDataList.first,
                                let uiImage = UIImage(data: firstImageData) {
                                 isAnalyzing = true
@@ -78,7 +81,7 @@ struct Lost1: View {
                         }
                     }
 
-                    // Image Preview
+                    
                     if !selectedImageDataList.isEmpty {
                         TabView {
                             ForEach(selectedImageDataList, id: \.self) { imageData in
@@ -97,7 +100,7 @@ struct Lost1: View {
                         .frame(height: 320)
                     }
 
-                    // Tag display and removal
+                   
                     if isAnalyzing {
                         ProgressView("Analyzing image...")
                             .padding(.vertical)
@@ -111,39 +114,58 @@ struct Lost1: View {
                         .padding(.vertical)
                     }
 
-                    // Pet Name
-                    TextField("Enter Pet Name", text: $petName)
-                        .padding()
-                        .foregroundColor(.gray)
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gray, lineWidth: 1))
-                        .padding(.top, 30)
+                    
+                    
+                    TextField(
+                        "",
+                        text: $petName,
+                        prompt: Text("Enter Pet Name").foregroundColor(.gray)
+                    )
+                    .foregroundColor(.white)
+                    .padding()
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.gray, lineWidth: 1))
+                    .padding(.top, 30)
+                    .padding(.bottom, 50)
 
-                    // Description
-                    TextEditor(text: $description)
-                        .frame(height: 150)
-                        .padding()
-                        .background(Color.white.opacity(0.1))
-                        .cornerRadius(10)
-                        .foregroundColor(.white)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.gray, lineWidth: 1)
-                        )
-                        .padding(.bottom, 40)
+                    ZStack(alignment: .topLeading) {
+                        
+                        if description.isEmpty {
+                            Text("Enter Description")
+                                .foregroundColor(.customLightGray)
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 32)
+                        }
+                        
+                        TextEditor(text: $description)
+                            .scrollContentBackground(.hidden)
+                            .background(Color.white.opacity(0.1))
+                            .foregroundColor(.white)
+                            .frame(height: 150)
+                            .padding()
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.gray, lineWidth: 1)
+                            )
+                            .padding(.bottom, 40)
+                    }
+                    .frame(height: 150)
+                    .padding(.horizontal)
+                    .padding(.bottom, 180)
 
-                    // Upload Button
+
+                  
                     Button(action: savePetDetails) {
                         if isUploading || isAnalyzing {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
                         } else {
-                            Text("Next >")
+                            Text("Next ")
                                 .bold()
                         }
                     }
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color.gray)
+                    .background(Color.customLightGray)
                     .foregroundColor(.black)
                     .cornerRadius(10)
                     .disabled(isUploading || isAnalyzing)
@@ -161,7 +183,7 @@ struct Lost1: View {
         }
     }
 
-    // MARK: - Save Pet Details to Firebase
+    
     func savePetDetails() {
         guard !petName.isEmpty, !description.isEmpty else {
             print("⚠️ Pet name or description missing.")
@@ -193,7 +215,7 @@ struct Lost1: View {
         }
     }
 
-    // MARK: - Upload Images to Firebase Storage
+    
     func uploadImages(images: [Data], completion: @escaping ([String]) -> Void) {
         guard !images.isEmpty else {
             completion([])
@@ -236,12 +258,12 @@ struct Lost1: View {
     }
 }
 
-// Tag display and removal view
+
 struct Wrap: View {
     @Binding var tags: [String]
 
     var body: some View {
-        // Simple horizontal wrap for tags
+       
         VStack(alignment: .leading) {
             ForEach(tags, id: \.self) { tag in
                 HStack {

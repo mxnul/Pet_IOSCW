@@ -21,28 +21,39 @@ struct Login2: View {
                 Image(systemName: "pawprint.fill")
                     .resizable()
                     .foregroundColor(.customLightGray)
-                    .frame(width: 80, height: 80)
+                    .frame(width: 100, height: 100)
                     .padding(.top, 60)
 
                 Text("Pet Locator")
                     .font(.title)
                     .foregroundColor(.customLightGray)
                     .bold()
+                    .padding(.bottom, 35)
 
-                TextField("Email", text: $email)
-                    .foregroundColor(.customLightGray)
+               
+                TextField("", text: $email, prompt: Text("Email").foregroundColor(.gray))
+                    .autocapitalization(.none)
                     .keyboardType(.emailAddress)
                     .padding()
-                    .foregroundColor(.customLightGray)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.customLightGray, lineWidth: 1))
+                    .foregroundColor(.white)
+                    .background(Color.black)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.customLightGray, lineWidth: 1)
+                    )
                     .padding(.top, 30)
 
-                SecureField("Password", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+               
+                SecureField("", text: $password, prompt: Text("Password").foregroundColor(.gray))
                     .padding()
-                    .foregroundColor(.customLightGray)
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.customLightGray, lineWidth: 1))
+                    .foregroundColor(.white)
+                    .background(Color.black)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.customLightGray, lineWidth: 1)
+                    )
                     .padding(.top, 30)
+                    .padding(.bottom, 30)  
 
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
@@ -56,11 +67,11 @@ struct Login2: View {
                         ProgressView()
                     } else {
                         Text("Sign In")
-                            .frame(maxWidth: .infinity)
+                            .frame(width: 350)
                             .padding()
                             .background(Color.customLightGray)
                             .foregroundColor(.black)
-                            .cornerRadius(8)
+                            .cornerRadius(20)
                     }
                 }
                 .disabled(isLoading)
@@ -70,9 +81,9 @@ struct Login2: View {
             }
             .padding()
             .background(Color.black)
-          
-
-            
+            .onTapGesture {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
             .background(
                 NavigationLink(destination: MainTabView(), isActive: $isLoggedIn) {
                     EmptyView()
@@ -91,7 +102,6 @@ struct Login2: View {
             if let error = error {
                 errorMessage = error.localizedDescription
             } else {
-              
                 isLoggedIn = true
             }
         }
@@ -101,4 +111,3 @@ struct Login2: View {
 #Preview {
     Login2()
 }
-

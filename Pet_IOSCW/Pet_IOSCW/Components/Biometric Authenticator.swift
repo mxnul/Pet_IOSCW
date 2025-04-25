@@ -14,7 +14,7 @@ class BiometricAuthenticator {
 
         if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
             let reason = "Access Lost Pet Feature"
-
+            
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, _ in
                 DispatchQueue.main.async {
                     completion(success)
@@ -27,3 +27,4 @@ class BiometricAuthenticator {
         }
     }
 }
+
